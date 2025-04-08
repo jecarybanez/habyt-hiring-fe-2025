@@ -10,7 +10,7 @@ export const PropertyTypeFilter = ({ isCompact }: { isCompact: boolean }) => {
   const shareType = useAppSelector((state) => state.filters.shareType);
 
   return (
-    <div className='relative'>
+    <div className='relative col-span-1'>
       {!isCompact && (
         <label className="absolute bg-white left-2 -top-3 px-2 text-sm font-medium text-gray-700 z-10">
           Property Type

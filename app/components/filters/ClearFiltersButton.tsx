@@ -12,7 +12,7 @@ export const ClearFiltersButton = ({ isCompact }: { isCompact: boolean }) => {
   return (
     <button
       onClick={() => dispatch(resetFilters())}
-      className={`${INPUT_CLASSES} cursor-pointer hover:bg-gray-50 ${isCompact && 'text-sm'}`}
+      className={`${INPUT_CLASSES} cursor-pointer col-span-1 hover:bg-gray-50 ${isCompact && 'text-sm'}`}
       disabled={loading}
     >
       Clear all filters

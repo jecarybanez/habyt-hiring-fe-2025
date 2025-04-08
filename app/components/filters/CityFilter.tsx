@@ -9,7 +9,7 @@ export const CityFilter = ({ isCompact }: { isCompact: boolean }) => {
   const dispatch = useAppDispatch();
 
   return (
-    <div className='relative'>
+    <div className='relative col-span-1'>
       {!isCompact && (
         <label className="absolute bg-white left-2 -top-3 px-2 text-sm font-medium text-gray-700 z-10">
           City

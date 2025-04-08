@@ -13,7 +13,7 @@ export const SortingOptions = ({ isCompact }: { isCompact: boolean }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative col-span-1">
       <select
         value={sortOption}
         onChange={handleSortChange}

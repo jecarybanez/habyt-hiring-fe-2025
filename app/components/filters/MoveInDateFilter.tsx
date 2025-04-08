@@ -10,7 +10,7 @@ export const MoveInDateFilter = ({ isCompact }: { isCompact: boolean }) => {
   const loading = useAppSelector((state) => state.listings.loading);
 
   return (
-    <div className='relative'>
+    <div className='relative col-span-1'>
       {!isCompact && (
         <label htmlFor="moveInDate" className="absolute bg-white left-2 -top-3 px-2 text-sm font-medium text-gray-700 z-10">
           Move-in Date
