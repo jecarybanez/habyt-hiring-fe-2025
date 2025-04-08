@@ -1,3 +1,5 @@
+import { store } from '../store';
+
 export interface Listing {
   referenceId: string;
   bookable: boolean;
@@ -87,10 +89,19 @@ export interface APIResponse {
       totalPages: number;
       hasNextPage: boolean;
       hasPrevPage: boolean;
+      totalItems: number;
     };
     filters?: {
       referenceId?: string;
     };
+    sort: {
+      field: string,
+      order: string,
+      isConsistent: boolean,
+    };
   };
   data: Listing[];
 } 
+
+export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;

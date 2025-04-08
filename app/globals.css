@@ -22,3 +22,8 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.sticky-filter {
+  transform: translateZ(0); /* Promote to own layer */
+  backface-visibility: hidden; /* Prevent repaints */
+}

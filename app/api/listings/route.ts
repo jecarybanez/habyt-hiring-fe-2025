@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { APIResponse } from '@/app/types/listing';
+import { APIResponse, Listing } from '@/app/types/listing';
 
 export async function GET(request: NextRequest) {
   try {
     // Read the JSON file
     const filePath = path.join(process.cwd(), 'public', 'data.json');
     const fileContents = fs.readFileSync(filePath, 'utf8');
-    const data: APIResponse = JSON.parse(fileContents);
+    const allData: APIResponse = JSON.parse(fileContents);
     
-    // Get URL search parameters for filtering
+    // Get URL search parameters for filtering and sorting
     const searchParams = request.nextUrl.searchParams;
     
-    // Filter parameters based on OpenAPI spec
+    // Filter parameters
     const page = parseInt(searchParams.get('page') || '0');
     const pageSize = parseInt(searchParams.get('pageSize') || '100');
     const bookable = searchParams.get('bookable');
@@ -30,97 +30,96 @@ export async function GET(request: NextRequest) {
     const rentFrom = searchParams.get('rentFrom') ? parseFloat(searchParams.get('rentFrom')!) : null;
     const rentTo = searchParams.get('rentTo') ? parseFloat(searchParams.get('rentTo')!) : null;
     
-    // Apply filters to the data
-    let filteredData = [...data.data];
+    // Sorting parameters
+    const sortField = searchParams.get('sort') || 'rentNet';
+    const sortOrder = searchParams.get('order') || 'asc';
     
-    if (bookable === 'true') {
-      filteredData = filteredData.filter(listing => listing.bookable);
-    } else if (bookable === 'false') {
-      filteredData = filteredData.filter(listing => !listing.bookable);
-    }
-    
-    if (bookableOn) {
-      filteredData = filteredData.filter(listing => {
+    // STAGE 1: Filter ALL data first
+    const filteredData = allData.data.filter((listing) => {
+      // Apply all filters in a single pass
+      if (bookable === 'true' && !listing.bookable) return false;
+      if (bookable === 'false' && listing.bookable) return false;
+      
+      if (bookableOn) {
         const bookableDate = new Date(bookableOn);
         const from = new Date(listing.bookingWindow.bookableFrom);
         const to = new Date(listing.bookingWindow.bookableTo);
-        return bookableDate >= from && bookableDate <= to;
-      });
-    }
-    
-    if (bookableFrom) {
-      filteredData = filteredData.filter(listing => {
+        if (!(bookableDate >= from && bookableDate <= to)) return false;
+      }
+      
+      if (bookableFrom) {
         const date = new Date(bookableFrom);
         const to = new Date(listing.bookingWindow.bookableTo);
-        return date <= to;
-      });
-    }
-    
-    if (bookableTo) {
-      filteredData = filteredData.filter(listing => {
+        if (!(date <= to)) return false;
+      }
+      
+      if (bookableTo) {
         const date = new Date(bookableTo);
         const from = new Date(listing.bookingWindow.bookableFrom);
-        return date >= from;
-      });
-    }
+        if (!(date >= from)) return false;
+      }
+      
+      if (referenceId && listing.referenceId !== referenceId) return false;
+      if (countryCodes.length > 0 && !countryCodes.includes(listing.countryCode)) return false;
+      if (cities.length > 0 && !cities.includes(listing.city)) return false;
+      if (shareTypes.length > 0 && !shareTypes.includes(listing.shareType)) return false;
+      if (postalCode && listing.propertyPostalCode !== postalCode) return false;
+      if (bedroomsFrom !== null && listing.apartmentBedroomCount < bedroomsFrom) return false;
+      if (bedroomsTo !== null && listing.apartmentBedroomCount > bedroomsTo) return false;
+      if (rentFrom !== null && listing.rentNet < rentFrom) return false;
+      if (rentTo !== null && listing.rentNet > rentTo) return false;
+      
+      return true;
+    });
     
-    if (referenceId) {
-      filteredData = filteredData.filter(listing => listing.referenceId === referenceId);
-    }
+    // STAGE 2: Sort ALL filtered results
+    const sortedData = filteredData.sort((a, b) => {
+      // Get comparable values for sorting
+      const getSortValue = (item: Listing) => {
+        switch (sortField) {
+          case 'rentNet':
+            return item.rentNet;
+          case 'bookableFrom':
+            return new Date(item.bookingWindow.bookableFrom).getTime();
+          case 'roomArea':
+            return item.roomArea || 0;
+          default:
+            return item.rentNet;
+        }
+      };
+      
+      const valueA = getSortValue(a);
+      const valueB = getSortValue(b);
+      
+      return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+    });
     
-    if (countryCodes.length > 0) {
-      filteredData = filteredData.filter(listing => countryCodes.includes(listing.countryCode));
-    }
-    
-    if (cities.length > 0) {
-      filteredData = filteredData.filter(listing => cities.includes(listing.city));
-    }
-    
-    if (shareTypes.length > 0) {
-      filteredData = filteredData.filter(listing => shareTypes.includes(listing.shareType));
-    }
-    
-    if (postalCode) {
-      filteredData = filteredData.filter(listing => listing.propertyPostalCode === postalCode);
-    }
-    
-    if (bedroomsFrom !== null) {
-      filteredData = filteredData.filter(listing => listing.apartmentBedroomCount >= bedroomsFrom);
-    }
-    
-    if (bedroomsTo !== null) {
-      filteredData = filteredData.filter(listing => listing.apartmentBedroomCount <= bedroomsTo);
-    }
-    
-    if (rentFrom !== null) {
-      filteredData = filteredData.filter(listing => listing.rentNet >= rentFrom);
-    }
-    
-    if (rentTo !== null) {
-      filteredData = filteredData.filter(listing => listing.rentNet <= rentTo);
-    }
-    
-    // Apply pagination
+    // STAGE 3: Paginate the properly sorted results
     const startIndex = page * pageSize;
     const endIndex = startIndex + pageSize;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+    const paginatedData = sortedData.slice(startIndex, endIndex);
     
-    // Build response with metadata and paginated data
+    // Build response with metadata
     const response: APIResponse = {
       metadata: {
         pagination: {
           currentPage: page,
           currentPageSize: paginatedData.length,
-          totalPages: Math.ceil(filteredData.length / pageSize),
-          hasNextPage: endIndex < filteredData.length,
-          hasPrevPage: page > 0
+          totalPages: Math.ceil(sortedData.length / pageSize),
+          hasNextPage: endIndex < sortedData.length,
+          hasPrevPage: page > 0,
+          totalItems: sortedData.length 
         },
-        filters: referenceId ? { referenceId } : {}
+        filters: referenceId ? { referenceId } : {},
+        sort: {
+          field: sortField,
+          order: sortOrder,
+          isConsistent: true 
+        }
       },
       data: paginatedData
     };
     
-    // Return the filtered data as JSON
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching listings data:', error);
@@ -129,4 +128,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
