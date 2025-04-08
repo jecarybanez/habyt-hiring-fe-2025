@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface FiltersState {
+export interface FiltersState {
   cities: string[];
   rentFrom: string;
   rentTo: string;

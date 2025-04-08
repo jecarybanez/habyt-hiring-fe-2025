@@ -5,7 +5,7 @@ import { ListingCard } from '@/app/components/listings/ListingCard';
 import { ListingsSkeleton } from '@/app/components/listings/ListingsSkeleton';
 import { ListingsError } from '@/app/components/listings/ListingsError';
 
-interface ListingsContentProps {
+export interface ListingsContentProps {
   listings: Listing[];
   loading: boolean;
   error: string | null;

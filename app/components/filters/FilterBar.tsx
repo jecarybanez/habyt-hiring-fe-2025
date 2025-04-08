@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useScrollHandler } from '../../hooks/useScrollHandler';
+import { useScrollHandler } from '@/app/hooks/useScrollHandler';
 import { CityFilter } from './CityFilter';
 import { PriceRangeFilter } from './PriceRangeFilter';
 import { MoveInDateFilter } from './MoveInDateFilter';

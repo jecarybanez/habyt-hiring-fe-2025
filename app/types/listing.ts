@@ -103,5 +103,17 @@ export interface APIResponse {
   data: Listing[];
 } 
 
+export interface ListingsState {
+  data: Listing[];
+  loading: boolean;
+  error: string | null;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;

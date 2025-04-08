@@ -1,20 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Listing } from '@/app/types/listing';
+import { ListingsState } from '@/app/types/listing';
 import { RootState } from '@/app/store';
 
-interface ListingsState {
-  data: Listing[];
-  loading: boolean;
-  error: string | null;
-  pagination: {
-    currentPage: number;  // This will now be 1-based to match API response
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-}
-
-const initialState: ListingsState = {
+export const initialState: ListingsState = {
   data: [],
   loading: false,
   error: null,
