@@ -135,21 +135,17 @@ test('filter reducer updates correctly', () => {
 1. Install dependencies:
 
 ```bash
-Copy
-
 npm install
 ```
 
 2. Start development server:
 
 ```bash
-Copy
 npm run dev
 ```
 
 3. Run tests:
 
 ```bash
-Copy
 npm test
 ```
